@@ -13,12 +13,6 @@ echo "Installation des dépendances Python..."
 echo "Migrations base de données..."
 /usr/local/bin/uv run alembic upgrade head
 
-echo "Build du panel admin..."
-cd admin-src
-npm ci
-npm run build
-cd ..
-
 echo "Redémarrage du service..."
 systemctl restart multisite-api
 
