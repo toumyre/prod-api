@@ -4,9 +4,6 @@
 
 set -e
 
-echo "Mise à jour du code..."
-git pull origin main
-
 echo "Installation des dépendances Python..."
 /usr/local/bin/uv sync
 
