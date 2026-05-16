@@ -143,6 +143,12 @@ def sync():
 
                 match_status = match.get("status", "pending")
                 scheduled_at = parse_dt(match.get("scheduledDatetime"))
+                if scheduled_at is None:
+                    round_name = (match.get("round") or {}).get("name", "")
+                    try:
+                        scheduled_at = datetime.strptime(round_name, "%d/%m/%Y").replace(tzinfo=timezone.utc)
+                    except (ValueError, TypeError):
+                        pass
                 played_at = parse_dt(match.get("playedAt"))
 
                 stage = match.get("stage") or {}
