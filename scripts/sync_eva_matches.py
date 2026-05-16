@@ -60,7 +60,7 @@ def sync():
         tournaments = eva_get(
             "/tournaments",
             params={"organization_ids": EVA_CAEN_ORG_ID},
-            range_header="tournaments=0-99",
+            range_header="tournaments=0-299",
         )
     except Exception as e:
         print(f"Erreur fetch tournois: {e}")
