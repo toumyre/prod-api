@@ -30,6 +30,7 @@ export default function Roster() {
   const [success, setSuccess] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingEva, setUploadingEva] = useState(false);
+  const [search, setSearch] = useState("");
   const photoRef = useRef<HTMLInputElement>(null);
   const evaRef = useRef<HTMLInputElement>(null);
 
@@ -89,6 +90,12 @@ export default function Roster() {
       handleCancel(); load();
     } catch (err) { setError(String(err)); }
   };
+
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    item.name.toLowerCase().includes(q) ||
+    (item.role || "").toLowerCase().includes(q)
+  );
 
   return (
     <>
@@ -217,6 +224,10 @@ export default function Roster() {
         </div>
       )}
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom, rôle..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -232,14 +243,14 @@ export default function Roster() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={8} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>
-                  Aucun membre
+                  {search ? `Aucun résultat pour "${search}"` : "Aucun membre"}
                 </td>
               </tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <tr key={item.id}>
                 <td>
                   {item.photo_url

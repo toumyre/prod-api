@@ -30,6 +30,7 @@ export default function Skills() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => get<Skill[]>("/skills").then(setItems).catch(() => {});
@@ -81,6 +82,12 @@ export default function Skills() {
       handleCancel(); load();
     } catch (err) { setError(String(err)); }
   };
+
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    item.name.toLowerCase().includes(q) ||
+    (item.category || "").toLowerCase().includes(q)
+  );
 
   return (
     <>
@@ -180,6 +187,10 @@ export default function Skills() {
         </div>
       )}
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom, catégorie..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -193,14 +204,14 @@ export default function Skills() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={6} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>
-                  Aucune competence
+                  {search ? `Aucun résultat pour "${search}"` : "Aucune competence"}
                 </td>
               </tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <tr key={item.id}>
                 <td>
                   {item.logo_url

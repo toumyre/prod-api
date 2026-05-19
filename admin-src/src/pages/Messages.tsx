@@ -14,6 +14,7 @@ interface Message {
 export default function Messages() {
   const [items, setItems] = useState<Message[]>([]);
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
 
   const load = () => get<Message[]>("/messages").then(setItems).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -36,6 +37,14 @@ export default function Messages() {
     }
   };
 
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    item.name.toLowerCase().includes(q) ||
+    item.email.toLowerCase().includes(q) ||
+    (item.subject || "").toLowerCase().includes(q) ||
+    item.content.toLowerCase().includes(q)
+  );
+
   return (
     <>
       <div className="page-header">
@@ -45,6 +54,10 @@ export default function Messages() {
         </span>
       </div>
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom, email, sujet, contenu..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -59,14 +72,14 @@ export default function Messages() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>
-                  Aucun message
+                  {search ? `Aucun résultat pour "${search}"` : "Aucun message"}
                 </td>
               </tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <>
                 <tr key={item.id} style={{ cursor: "pointer" }} onClick={() => setExpanded(expanded === item.id ? null : item.id)}>
                   <td>

@@ -38,6 +38,7 @@ export default function Projects() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const mdFileRef = useRef<HTMLInputElement>(null);
   const contentImgRef = useRef<HTMLInputElement>(null);
@@ -115,6 +116,12 @@ export default function Projects() {
       handleCancel(); load();
     } catch (err) { setError(String(err)); }
   };
+
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    item.title.toLowerCase().includes(q) ||
+    (item.technologies || "").toLowerCase().includes(q)
+  );
 
   return (
     <>
@@ -258,6 +265,10 @@ export default function Projects() {
         </div>
       )}
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par titre, technologie..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -266,10 +277,10 @@ export default function Projects() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>Aucun projet</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>{search ? `Aucun résultat pour "${search}"` : "Aucun projet"}</td></tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <tr key={item.id}>
                 <td>{item.image_url ? <img src={item.image_url} alt={item.title} className="thumb" /> : "—"}</td>
                 <td className="truncate">{item.title}</td>

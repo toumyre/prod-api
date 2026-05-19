@@ -33,6 +33,7 @@ export default function Experiences() {
   const [editing, setEditing] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
 
   const load = () => get<Experience[]>("/experience").then(setItems).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -78,6 +79,13 @@ export default function Experiences() {
       handleCancel(); load();
     } catch (err) { setError(String(err)); }
   };
+
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    item.title.toLowerCase().includes(q) ||
+    item.company.toLowerCase().includes(q) ||
+    (item.technologies || "").toLowerCase().includes(q)
+  );
 
   return (
     <>
@@ -185,6 +193,10 @@ export default function Experiences() {
         </div>
       )}
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par poste, entreprise, technologies..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -199,14 +211,14 @@ export default function Experiences() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>
-                  Aucune experience
+                  {search ? `Aucun résultat pour "${search}"` : "Aucune experience"}
                 </td>
               </tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <tr key={item.id}>
                 <td className="truncate">{item.title}</td>
                 <td className="truncate">{item.company}</td>

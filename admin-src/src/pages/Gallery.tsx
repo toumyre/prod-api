@@ -33,6 +33,7 @@ export default function Gallery() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => get<GalleryItem[]>("/gallery").then(setItems).catch(() => {});
@@ -86,6 +87,13 @@ export default function Gallery() {
       handleCancel(); load();
     } catch (err) { setError(String(err)); }
   };
+
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    (item.title || "").toLowerCase().includes(q) ||
+    (item.category || "").toLowerCase().includes(q) ||
+    (item.tags || "").toLowerCase().includes(q)
+  );
 
   return (
     <>
@@ -210,6 +218,10 @@ export default function Gallery() {
         </div>
       )}
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par titre, catégorie, tags..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -225,14 +237,14 @@ export default function Gallery() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={8} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>
-                  Aucun element
+                  {search ? `Aucun résultat pour "${search}"` : "Aucun element"}
                 </td>
               </tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <tr key={item.id}>
                 <td>
                   {item.image_url

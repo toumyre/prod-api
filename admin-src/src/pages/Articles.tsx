@@ -42,6 +42,7 @@ export default function Articles() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const mdFileRef = useRef<HTMLInputElement>(null);
   const contentImgRef = useRef<HTMLInputElement>(null);
@@ -129,6 +130,13 @@ export default function Articles() {
       handleCancel(); load();
     } catch (err) { setError(String(err)); }
   };
+
+  const q = search.toLowerCase();
+  const filtered = items.filter((item) =>
+    item.title.toLowerCase().includes(q) ||
+    (item.category || "").toLowerCase().includes(q) ||
+    (item.tags || "").toLowerCase().includes(q)
+  );
 
   return (
     <>
@@ -277,6 +285,10 @@ export default function Articles() {
         </div>
       )}
 
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par titre, catégorie, tags..." style={{ width: "300px" }} />
+        {search && <span style={{ fontSize: "0.82rem", color: "var(--mid)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -291,14 +303,14 @@ export default function Articles() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ textAlign: "center", color: "var(--mid)", padding: "2rem" }}>
-                  Aucun article
+                  {search ? `Aucun résultat pour "${search}"` : "Aucun article"}
                 </td>
               </tr>
             )}
-            {items.map((item) => (
+            {filtered.map((item) => (
               <tr key={item.id}>
                 <td>
                   {item.image_url
