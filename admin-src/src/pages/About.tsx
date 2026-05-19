@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
-import MDEditor from "@uiw/react-md-editor";
+import RichEditor from "../components/RichEditor";
 import { get, post, put, uploadImage, uploadCV, uploadSynthesis } from "../lib/api";
 
 interface About {
@@ -142,17 +142,12 @@ export default function About() {
               )}
             </div>
 
-            {/* Bio markdown */}
             <div className="form-group full">
-              <label>Présentation (Markdown)</label>
-              <div data-color-mode="light">
-                <MDEditor
-                  value={form.bio}
-                  onChange={(v) => set("bio", v || "")}
-                  height={300}
-                  preview="live"
-                />
-              </div>
+              <label>Présentation</label>
+              <RichEditor
+                value={form.bio}
+                onChange={(v) => set("bio", v)}
+              />
             </div>
 
             {/* Liens */}

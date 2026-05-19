@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import MDEditor from "@uiw/react-md-editor";
+import RichEditor from "../components/RichEditor";
 import { get, post, put, del, getSiteId } from "../lib/api";
 
 interface Experience {
@@ -154,15 +154,12 @@ export default function Experiences() {
                 />
               </div>
               <div className="form-group full">
-                <label>Description (Markdown)</label>
-                <div data-color-mode="light">
-                  <MDEditor
-                    value={form.description || ""}
-                    onChange={(v) => setField("description", v || "")}
-                    height={260}
-                    preview="live"
-                  />
-                </div>
+                <label>Description</label>
+                <RichEditor
+                  key={editing ?? 'new'}
+                  value={form.description || ""}
+                  onChange={(v) => setField("description", v)}
+                />
               </div>
               <div className="form-group">
                 <label>Ordre</label>

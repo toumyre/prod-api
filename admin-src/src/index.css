@@ -355,3 +355,93 @@ tr:hover td { background: var(--grey); }
 
 /* Thumb */
 .thumb { width: 48px; height: 36px; object-fit: cover; border: var(--border-thin); }
+
+/* Rich Editor (TipTap) */
+.rich-editor {
+  border: var(--border);
+  background: var(--white);
+}
+
+.rich-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: var(--border-thin);
+  background: var(--grey);
+}
+
+.rt-btn {
+  background: var(--white);
+  border: var(--border-thin);
+  color: var(--black);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+  line-height: 1;
+  min-width: 28px;
+  text-align: center;
+  transition: background 0.1s;
+}
+.rt-btn:hover { background: #e4e4e4; }
+.rt-btn.active { background: var(--black); color: var(--white); }
+
+.rt-sep {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: var(--black);
+  margin: 0 0.15rem;
+  opacity: 0.2;
+  flex-shrink: 0;
+}
+
+.rich-content {
+  padding: 0.8rem 1rem;
+  min-height: 220px;
+  cursor: text;
+}
+
+.rich-content .ProseMirror {
+  outline: none;
+  min-height: 200px;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.rich-content .ProseMirror > * + * { margin-top: 0.6rem; }
+.rich-content .ProseMirror h2 { font-size: 1.15rem; font-weight: 700; }
+.rich-content .ProseMirror h3 { font-size: 0.95rem; font-weight: 700; }
+.rich-content .ProseMirror ul,
+.rich-content .ProseMirror ol { padding-left: 1.4rem; }
+.rich-content .ProseMirror blockquote {
+  border-left: 3px solid var(--black);
+  padding-left: 0.8rem;
+  color: var(--mid);
+}
+.rich-content .ProseMirror pre {
+  background: var(--black);
+  color: var(--white);
+  padding: 0.8rem;
+  font-size: 0.82rem;
+  overflow-x: auto;
+}
+.rich-content .ProseMirror code {
+  background: var(--grey);
+  padding: 0.1em 0.3em;
+  font-size: 0.85em;
+  border: var(--border-thin);
+}
+.rich-content .ProseMirror pre code { background: none; border: none; padding: 0; }
+.rich-content .ProseMirror img { max-width: 100%; height: auto; }
+
+.rich-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--mid);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

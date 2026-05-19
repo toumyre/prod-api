@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
-import MDEditor from "@uiw/react-md-editor";
+import RichEditor from "../components/RichEditor";
 import { get, post, put, del, uploadImage, getSiteId } from "../lib/api";
 
 interface Skill {
@@ -120,15 +120,12 @@ export default function Skills() {
                 <textarea value={form.description || ""} onChange={(e) => setField("description", e.target.value)} rows={2} placeholder="Courte description visible sur la carte..." />
               </div>
               <div className="form-group full">
-                <label>Détails (Markdown — affiché au clic sur la carte)</label>
-                <div data-color-mode="light">
-                  <MDEditor
-                    value={form.details || ""}
-                    onChange={(v) => setField("details", v || "")}
-                    height={280}
-                    preview="live"
-                  />
-                </div>
+                <label>Détails (affiché au clic sur la carte)</label>
+                <RichEditor
+                  key={editing ?? 'new'}
+                  value={form.details || ""}
+                  onChange={(v) => setField("details", v)}
+                />
               </div>
               <div className="form-group full">
                 <label>Logo URL</label>
