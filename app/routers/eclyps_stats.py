@@ -23,6 +23,8 @@ class PlayerStats(BaseModel):
     win_rate: float
 
     # Stats in-game
+    season_id: int | None
+    season_number: int | None
     game_count: int | None
     game_victories: int | None
     game_defeats: int | None
@@ -57,6 +59,8 @@ def get_players_stats(
             wins=p.wins,
             losses=p.losses,
             win_rate=round(p.win_rate, 1),
+            season_id=p.season_id,
+            season_number=p.season_number,
             game_count=p.game_count,
             game_victories=p.game_victories,
             game_defeats=p.game_defeats,

@@ -1,7 +1,9 @@
 """
 Sync les stats in-game de chaque joueur ECLYPS depuis api.eva.gg (GraphQL).
-Nécessite que le champ eva_app_username soit renseigné dans eva_players
-(format : "ECYxToumyre#586100")
+- Récupère la saison active dynamiquement
+- Filtre les stats sur la saison en cours (pas all-time)
+- Nécessite que le champ eva_app_username soit renseigné dans eva_players
+  (format : "ECYxToumyre#586100")
 
 Usage: uv run python scripts/sync_eva_app_stats.py
 """
@@ -10,6 +12,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
+import time
 import urllib.request
 from datetime import datetime, timezone
 from app.database import SessionLocal
@@ -18,12 +21,24 @@ from app.models.eva_player import EvaPlayer
 EVA_GRAPHQL = "https://api.eva.gg/graphql"
 UA = "Mozilla/5.0 (compatible; ECLYPS-sync/1.0)"
 
+SEASON_QUERY = """
+query getActiveSeason {
+  seasonActive {
+    id
+    seasonNumber
+    active
+    status
+  }
+}
+"""
+
 STATS_QUERY = """
-query GetPublicStats($username: String!) {
+query GetPublicStats($username: String!, $seasonId: Int) {
   getPublicPlayerByUsername(username: $username) {
     id
-    user { id username }
-    statistics {
+    statistics(seasonId: $seasonId) {
+      gameId
+      seasonId
       data {
         kills
         deaths
@@ -31,7 +46,6 @@ query GetPublicStats($username: String!) {
         gameCount
         gameVictoryCount
         gameDefeatCount
-        gameDrawCount
         gameTime
         bestKillStreak
         traveledDistance
@@ -58,8 +72,24 @@ def graphql(query: str, variables: dict) -> dict:
         return json.loads(resp.read())
 
 
+def get_active_season() -> tuple[int, int]:
+    """Retourne (season_id, season_number) de la saison active."""
+    result = graphql(SEASON_QUERY, {})
+    season = result.get("data", {}).get("seasonActive")
+    if not season:
+        raise RuntimeError("Impossible de récupérer la saison active depuis api.eva.gg")
+    return season["id"], season["seasonNumber"]
+
+
 def sync():
     db = SessionLocal()
+
+    # 1. Récupérer la saison active
+    print("Récupération de la saison active…")
+    season_id, season_number = get_active_season()
+    print(f"  → Saison {season_number} (id interne: {season_id})")
+
+    # 2. Joueurs à synchroniser
     players = db.query(EvaPlayer).filter(EvaPlayer.eva_app_username.isnot(None)).all()
 
     if not players:
@@ -73,16 +103,27 @@ def sync():
     for player in players:
         print(f"  Sync {player.player_name} ({player.eva_app_username})…")
         try:
-            result = graphql(STATS_QUERY, {"username": player.eva_app_username})
+            result = graphql(STATS_QUERY, {
+                "username": player.eva_app_username,
+                "seasonId": season_id,
+            })
             data = result.get("data", {}).get("getPublicPlayerByUsername")
             if not data:
                 print(f"    ⚠ Joueur introuvable sur app.eva.gg")
                 continue
 
-            stats = (data.get("statistics") or {}).get("data") or {}
-            kills  = stats.get("kills", 0)
-            deaths = stats.get("deaths", 0)
+            stats_obj = data.get("statistics") or {}
+            # Vérifier si profil privé (statistics peut être None)
+            if not stats_obj:
+                print(f"    ⚠ Profil privé ou aucune stats pour cette saison")
+                continue
 
+            stats = stats_obj.get("data") or {}
+            kills  = stats.get("kills") or 0
+            deaths = stats.get("deaths") or 0
+
+            player.season_id        = season_id
+            player.season_number    = season_number
             player.game_count       = stats.get("gameCount")
             player.game_victories   = stats.get("gameVictoryCount")
             player.game_defeats     = stats.get("gameDefeatCount")
@@ -92,13 +133,15 @@ def sync():
             player.kd_ratio         = round(kills / deaths, 2) if deaths > 0 else float(kills)
             player.game_time        = stats.get("gameTime")
             player.best_kill_streak = stats.get("bestKillStreak")
-            player.traveled_distance= stats.get("traveledDistance")
+            player.traveled_distance = stats.get("traveledDistance")
             player.synced_at        = now
 
             print(f"    ✅ {kills}K / {deaths}D / {player.kd_ratio}KD — {stats.get('gameCount')} parties")
 
         except Exception as e:
             print(f"    ❌ Erreur : {e}")
+
+        time.sleep(2)  # Éviter le rate limit EVA
 
     db.commit()
     db.close()

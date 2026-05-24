@@ -24,15 +24,17 @@ class EvaPlayer(Base):
     win_rate = Column(Float, default=0.0)
 
     # ── Stats in-game (API GraphQL eva.gg) ──────────────────────────────────
-    game_count = Column(Integer, nullable=True)         # Total parties jouées (tous modes)
-    game_victories = Column(Integer, nullable=True)     # Victoires totales
-    game_defeats = Column(Integer, nullable=True)       # Défaites totales
-    kills = Column(Integer, nullable=True)              # Kills totaux
-    deaths = Column(Integer, nullable=True)             # Morts totales
-    assists = Column(Integer, nullable=True)            # Assistances totales
-    kd_ratio = Column(Float, nullable=True)             # K/D calculé
-    game_time = Column(Integer, nullable=True)          # Temps de jeu total (secondes)
+    season_id = Column(Integer, nullable=True)          # ID interne EVA de la saison synchro
+    season_number = Column(Integer, nullable=True)      # Numéro de saison affiché (ex: 7)
+    game_count = Column(Integer, nullable=True)         # Total parties jouées (saison courante)
+    game_victories = Column(Integer, nullable=True)     # Victoires
+    game_defeats = Column(Integer, nullable=True)       # Défaites
+    kills = Column(Integer, nullable=True)              # Kills
+    deaths = Column(Integer, nullable=True)             # Morts
+    assists = Column(Integer, nullable=True)            # Assistances
+    kd_ratio = Column(Float, nullable=True)             # K/D calculé (kills/deaths)
+    game_time = Column(Integer, nullable=True)          # Temps de jeu (secondes)
     best_kill_streak = Column(Integer, nullable=True)   # Meilleure série d'éliminations
-    traveled_distance = Column(Float, nullable=True)    # Distance totale parcourue
+    traveled_distance = Column(Float, nullable=True)    # Distance totale parcourue (mètres)
 
     synced_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
