@@ -75,7 +75,7 @@ def login(body: LoginInput, response: Response, db: Session = Depends(get_db)):
         value=token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",  # cross-origin : stats.eclyps-esport.fr → api.t-etendard.fr
         max_age=60 * 60 * 24 * 7,  # 7 jours
     )
     return {"message": "Connecté", "username": user.username, "player_name": user.player_name}
@@ -84,7 +84,7 @@ def login(body: LoginInput, response: Response, db: Session = Depends(get_db)):
 @router.post("/logout")
 def logout(response: Response):
     """Déconnexion : supprime le cookie."""
-    response.delete_cookie("eclyps_token", samesite="lax", secure=True)
+    response.delete_cookie("eclyps_token", samesite="none", secure=True)
     return {"message": "Déconnecté"}
 
 
