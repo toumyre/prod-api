@@ -15,6 +15,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 
 ALLOWED_ORIGINS = [
     "https://eclyps-esport.fr",
+    "https://stats.eclyps-esport.fr",
     "https://portfolio.t-etendard.fr",
     "https://admin.t-etendard.fr",
     "http://localhost:5173",

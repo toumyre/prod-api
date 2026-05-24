@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Node / npm
+node_modules/
+npm-debug.log
+*.tgz
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Env & Secrets
+.env
+.env.*
+!.env.dist
+
+# Uploads (données de runtime)
+uploads/
+
+# Tests & Lint
+.pytest_cache
+htmlcov
+.coverage

@@ -19,6 +19,8 @@ from app.routers import about
 from app.routers import cv
 from app.routers import synthesis
 from app.routers import matches
+from app.routers import eclyps_auth
+from app.routers import eclyps_stats
 
 
 @asynccontextmanager
@@ -70,6 +72,10 @@ app.include_router(about.router, prefix="/api/about", tags=["À propos"])
 app.include_router(cv.router, prefix="/api/cv", tags=["CV"])
 app.include_router(synthesis.router, prefix="/api/synthesis", tags=["Synthèse"])
 app.include_router(matches.router, prefix="/api/matches", tags=["Matchs"])
+
+# ECLYPS Team — espace privé stats joueurs
+app.include_router(eclyps_auth.router, prefix="/api/eclyps/auth", tags=["ECLYPS Auth"])
+app.include_router(eclyps_stats.router, prefix="/api/eclyps/players", tags=["ECLYPS Stats"])
 
 
 @app.get("/")
