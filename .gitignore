@@ -16,7 +16,7 @@ uploads/
 admin_dist/
 
 # Alembic generated versions
-alembic/versions/*.py
+# alembic/versions/*.py
 !alembic/versions/.gitkeep
 
 # OS
