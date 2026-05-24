@@ -126,9 +126,15 @@ def sync():
             new_game_count = stats.get("gameCount") or 0
             new_kd = round(kills / deaths, 2) if deaths > 0 else float(kills)
 
-            # Sauvegarder un snapshot si de nouvelles parties ont été jouées
+            # Sauvegarder un snapshot si :
+            # - nouvelles parties depuis le dernier sync
+            # - OU aucun snapshot existant (baseline initiale)
             old_game_count = player.game_count or 0
-            if new_game_count > old_game_count:
+            has_snapshot = db.query(EvaPlayerSnapshot).filter(
+                EvaPlayerSnapshot.player_id == player.id
+            ).first() is not None
+
+            if new_game_count > old_game_count or not has_snapshot:
                 snapshot = EvaPlayerSnapshot(
                     player_id      = player.id,
                     snapshot_at    = now,
@@ -143,8 +149,11 @@ def sync():
                     game_time      = stats.get("gameTime"),
                 )
                 db.add(snapshot)
-                new_games = new_game_count - old_game_count
-                print(f"    📸 Snapshot sauvegardé (+{new_games} parties depuis le dernier sync)")
+                if not has_snapshot:
+                    print(f"    📸 Snapshot initial (baseline) sauvegardé")
+                else:
+                    new_games = new_game_count - old_game_count
+                    print(f"    📸 Snapshot sauvegardé (+{new_games} parties depuis le dernier sync)")
 
             player.season_id         = season_id
             player.season_number     = season_number
