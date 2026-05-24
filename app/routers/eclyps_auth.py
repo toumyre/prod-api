@@ -63,7 +63,9 @@ def get_current_eclyps_user(request: Request, db: Session = Depends(get_db)) -> 
 @router.post("/login")
 def login(body: LoginInput, response: Response, db: Session = Depends(get_db)):
     """Connexion d'un joueur ECLYPS → pose un cookie sécurisé."""
-    user = db.query(EclypUser).filter(EclypUser.username == body.username).first()
+    # Comparaison insensible à la casse (toumyre = Toumyre = TOUMYRE)
+    from sqlalchemy import func
+    user = db.query(EclypUser).filter(func.lower(EclypUser.username) == body.username.lower()).first()
     if not user or not verify_password(body.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Identifiants incorrects")
     if not user.is_active:
