@@ -17,6 +17,7 @@ import urllib.request
 from datetime import datetime, timezone
 from app.database import SessionLocal
 from app.models.eva_player import EvaPlayer
+from app.models.eva_player_snapshot import EvaPlayerSnapshot
 
 EVA_GRAPHQL = "https://api.eva.gg/graphql"
 UA = "Mozilla/5.0 (compatible; ECLYPS-sync/1.0)"
@@ -122,21 +123,44 @@ def sync():
             kills  = stats.get("kills") or 0
             deaths = stats.get("deaths") or 0
 
-            player.season_id        = season_id
-            player.season_number    = season_number
-            player.game_count       = stats.get("gameCount")
-            player.game_victories   = stats.get("gameVictoryCount")
-            player.game_defeats     = stats.get("gameDefeatCount")
-            player.kills            = kills
-            player.deaths           = deaths
-            player.assists          = stats.get("assists")
-            player.kd_ratio         = round(kills / deaths, 2) if deaths > 0 else float(kills)
-            player.game_time        = stats.get("gameTime")
-            player.best_kill_streak = stats.get("bestKillStreak")
-            player.traveled_distance = stats.get("traveledDistance")
-            player.synced_at        = now
+            new_game_count = stats.get("gameCount") or 0
+            new_kd = round(kills / deaths, 2) if deaths > 0 else float(kills)
 
-            print(f"    ✅ {kills}K / {deaths}D / {player.kd_ratio}KD — {stats.get('gameCount')} parties")
+            # Sauvegarder un snapshot si de nouvelles parties ont été jouées
+            old_game_count = player.game_count or 0
+            if new_game_count > old_game_count:
+                snapshot = EvaPlayerSnapshot(
+                    player_id      = player.id,
+                    snapshot_at    = now,
+                    season_number  = season_number,
+                    game_count     = new_game_count,
+                    game_victories = stats.get("gameVictoryCount"),
+                    game_defeats   = stats.get("gameDefeatCount"),
+                    kills          = kills,
+                    deaths         = deaths,
+                    assists        = stats.get("assists"),
+                    kd_ratio       = new_kd,
+                    game_time      = stats.get("gameTime"),
+                )
+                db.add(snapshot)
+                new_games = new_game_count - old_game_count
+                print(f"    📸 Snapshot sauvegardé (+{new_games} parties depuis le dernier sync)")
+
+            player.season_id         = season_id
+            player.season_number     = season_number
+            player.game_count        = new_game_count
+            player.game_victories    = stats.get("gameVictoryCount")
+            player.game_defeats      = stats.get("gameDefeatCount")
+            player.kills             = kills
+            player.deaths            = deaths
+            player.assists           = stats.get("assists")
+            player.kd_ratio          = new_kd
+            player.game_time         = stats.get("gameTime")
+            player.best_kill_streak  = stats.get("bestKillStreak")
+            player.traveled_distance = stats.get("traveledDistance")
+            player.synced_at         = now
+
+            print(f"    ✅ {kills}K / {deaths}D / {new_kd}KD — {new_game_count} parties")
 
         except Exception as e:
             print(f"    ❌ Erreur : {e}")
