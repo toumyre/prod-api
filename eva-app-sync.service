@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync ECLYPS in-game stats from EVA app (GraphQL)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/api
+ExecStart=/srv/api/.venv/bin/python scripts/sync_eva_app_stats.py
+User=tommy
+StandardOutput=journal
+StandardError=journal
