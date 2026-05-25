@@ -54,6 +54,7 @@ class PlayerStats(BaseModel):
     player_name: str
     eva_user_id: str | None
     eva_app_username: str | None
+    eva_app_user_id: int | None
 
     # Stats compétitives
     tournaments_played: int
@@ -113,6 +114,7 @@ def get_players_stats(
             player_name=p.player_name,
             eva_user_id=p.eva_user_id,
             eva_app_username=p.eva_app_username,
+            eva_app_user_id=p.eva_app_user_id,
             tournaments_played=p.tournaments_played,
             matches_played=p.matches_played,
             wins=p.wins,
