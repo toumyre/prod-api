@@ -37,6 +37,7 @@ STATS_QUERY = """
 query GetPublicStats($username: String!, $seasonId: Int) {
   getPublicPlayerByUsername(username: $username) {
     id
+    user { id }
     statistics(seasonId: $seasonId) {
       gameId
       seasonId
@@ -112,6 +113,11 @@ def sync():
             if not data:
                 print(f"    ⚠ Joueur introuvable sur app.eva.gg")
                 continue
+
+            # Sauvegarder le user.id EVA app (pour l'historique des parties)
+            eva_app_user_id = (data.get("user") or {}).get("id")
+            if eva_app_user_id and player.eva_app_user_id != eva_app_user_id:
+                player.eva_app_user_id = eva_app_user_id
 
             stats_obj = data.get("statistics") or {}
             # Vérifier si profil privé (statistics peut être None)

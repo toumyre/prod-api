@@ -1,3 +1,5 @@
+import json
+import urllib.request
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -6,6 +8,41 @@ from app.models.eclyps_user import EclypUser
 from app.models.eva_player import EvaPlayer
 from app.models.eva_player_snapshot import EvaPlayerSnapshot
 from app.routers.eclyps_auth import get_current_eclyps_user
+
+EVA_GRAPHQL = "https://api.eva.gg/graphql"
+EVA_UA = "Mozilla/5.0 (compatible; ECLYPS-sync/1.0)"
+
+GAMES_QUERY = """
+query GetHistory($userId: Int!, $seasonId: Int!) {
+  listLastAfterhGameHistoriesByUserAndSeason(userId: $userId, seasonId: $seasonId) {
+    id
+    createdAt
+    data {
+      duration
+      teamOne { score name }
+      teamTwo { score name }
+    }
+    players {
+      userId
+      data { kills deaths assists outcome team score niceName }
+    }
+    map { name }
+    mode { identifier }
+  }
+}
+"""
+
+def _fetch_eva_games(eva_user_id: int, season_id: int) -> list:
+    payload = json.dumps({"query": GAMES_QUERY, "variables": {"userId": eva_user_id, "seasonId": season_id}}).encode()
+    req = urllib.request.Request(EVA_GRAPHQL, data=payload, headers={
+        "Content-Type": "application/json",
+        "Origin": "https://app.eva.gg",
+        "Referer": "https://app.eva.gg/",
+        "User-Agent": EVA_UA,
+    })
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        result = json.loads(resp.read())
+    return result.get("data", {}).get("listLastAfterhGameHistoriesByUserAndSeason") or []
 
 router = APIRouter()
 
@@ -97,6 +134,46 @@ def get_players_stats(
         )
         for p in players
     ]
+
+
+@router.get("/{player_id}/games")
+def get_player_games(
+    player_id: int,
+    db: Session = Depends(get_db),
+    _: EclypUser = Depends(get_current_eclyps_user),
+):
+    """Retourne les 10 dernières parties du joueur (proxy vers api.eva.gg)."""
+    player = db.query(EvaPlayer).filter(EvaPlayer.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Joueur introuvable")
+    if not player.eva_app_user_id or not player.season_id:
+        raise HTTPException(status_code=404, detail="Historique non disponible (eva_app_user_id manquant)")
+
+    try:
+        games = _fetch_eva_games(player.eva_app_user_id, player.season_id)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Erreur EVA API : {e}")
+
+    result = []
+    for g in games:
+        # Trouver les stats du joueur dans cette partie
+        me = next((p for p in g["players"] if p["userId"] == player.eva_app_user_id), None)
+        d = me["data"] if me else {}
+        result.append({
+            "id":          g["id"],
+            "date":        g["createdAt"],
+            "map":         (g.get("map") or {}).get("name"),
+            "mode":        (g.get("mode") or {}).get("identifier"),
+            "nb_players":  len(g["players"]),
+            "duration":    (g.get("data") or {}).get("duration"),
+            "outcome":     d.get("outcome"),   # "Victory" / "Defeat" / "Draw"
+            "kills":       d.get("kills"),
+            "deaths":      d.get("deaths"),
+            "assists":     d.get("assists"),
+            "team":        d.get("team"),
+            "score":       d.get("score"),
+        })
+    return result
 
 
 @router.get("/{player_id}/history", response_model=list[SnapshotOut])

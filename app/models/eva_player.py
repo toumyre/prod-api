@@ -15,6 +15,7 @@ class EvaPlayer(Base):
     player_name = Column(String, nullable=False, index=True)   # pseudo affiché (ex: "ECYxTitboyyy")
     eva_user_id = Column(String, nullable=True)                # ID sur competitive.eva.gg (Toornament)
     eva_app_username = Column(String, nullable=True)           # Username app EVA (ex: "ECYxToumyre#586100")
+    eva_app_user_id  = Column(Integer, nullable=True)          # user.id EVA app (pour l'historique des parties)
 
     # ── Stats compétitives (API Toornament) ──────────────────────────────────
     tournaments_played = Column(Integer, default=0)
