@@ -35,6 +35,7 @@ export default function Gallery() {
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const multiFileRef = useRef<HTMLInputElement>(null);
 
   const load = () => get<GalleryItem[]>("/gallery").then(setItems).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -73,6 +74,23 @@ export default function Gallery() {
     finally { setUploading(false); }
   };
 
+  const handleMultiUpload = async (files: FileList) => {
+    setUploading(true);
+    setError(""); setSuccess("");
+    let ok = 0;
+    for (const file of Array.from(files)) {
+      try {
+        const url = await uploadImage(file);
+        await post("/gallery", { type: "photo", category: "", title: file.name.replace(/\.[^.]+$/, ""), description: "", image_url: url, video_url: "", tags: "", published: true, sort_order: 0, site_id: 2 });
+        ok++;
+      } catch {
+        setError(`Erreur sur ${file.name}`);
+      }
+    }
+    setUploading(false);
+    if (ok > 0) { setSuccess(`${ok} photo${ok > 1 ? "s" : ""} importée${ok > 1 ? "s" : ""}.`); load(); }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(""); setSuccess("");
@@ -100,9 +118,26 @@ export default function Gallery() {
       <div className="page-header">
         <h1>Galerie</h1>
         {editing === null && (
-          <button className="btn btn-primary" onClick={() => { setEditing(0); setForm(empty()); }}>
-            + Nouvel element
-          </button>
+          <>
+            <button className="btn btn-primary" onClick={() => { setEditing(0); setForm(empty()); }}>
+              + Nouvel element
+            </button>
+            <input
+              ref={multiFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => e.target.files && e.target.files.length > 0 && handleMultiUpload(e.target.files)}
+            />
+            <button
+              className="btn btn-secondary"
+              onClick={() => multiFileRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? "Import en cours..." : "⬆ Importer plusieurs photos"}
+            </button>
+          </>
         )}
       </div>
 
