@@ -23,7 +23,7 @@ async def upload_file(
 
     content = await file.read(MAX_IMAGE_SIZE + 1)
     if len(content) > MAX_IMAGE_SIZE:
-        raise HTTPException(413, "Fichier trop volumineux. Taille maximum : 5 Mo")
+        raise HTTPException(413, "Fichier trop volumineux. Taille maximum : 50 Mo")
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     filename = f"{uuid.uuid4().hex}{ext}"
