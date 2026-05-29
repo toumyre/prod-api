@@ -9,7 +9,7 @@ router = APIRouter()
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
 ALLOWED_MIMETYPES = {"image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"}
-MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 Mo
+MAX_IMAGE_SIZE = 50 * 1024 * 1024  # 50 Mo
 
 
 @router.post("/")
