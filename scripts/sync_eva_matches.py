@@ -38,7 +38,12 @@ def eva_get(path, params=None, range_header=None):
     if range_header:
         req.add_header("Range", range_header)
     with urllib.request.urlopen(req, timeout=15) as resp:
-        return json.loads(resp.read())
+        data = json.loads(resp.read())
+    # L'API EVA renvoie désormais un objet paginé {"items": [...], "range": ...}
+    # au lieu d'une liste brute. On extrait "items" tout en restant rétro-compatible.
+    if isinstance(data, dict) and "items" in data:
+        return data["items"]
+    return data
 
 
 def parse_dt(value):
