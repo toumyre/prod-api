@@ -43,7 +43,9 @@ def _discover_ranking_ids() -> list[str]:
         )
         req.add_header("Range", "items=0-99")
         with urllib.request.urlopen(req, timeout=10) as r:
-            items = json.loads(r.read())
+            data = json.loads(r.read())
+        # L'API EVA renvoie désormais un objet paginé {"items": [...], "range": ...}
+        items = data.get("items", []) if isinstance(data, dict) else data
 
         seen: set[str] = set()
         ids: list[str] = []
@@ -80,7 +82,9 @@ def _fetch_season_standings(ranking_id: str) -> list[dict]:
     )
     req.add_header("Range", "items=0-49")
     with urllib.request.urlopen(req, timeout=10) as r:
-        items = json.loads(r.read())
+        data = json.loads(r.read())
+    # L'API EVA renvoie désormais un objet paginé {"items": [...], "range": ...}
+    items = data.get("items", []) if isinstance(data, dict) else data
 
     standings = []
     for item in items:
