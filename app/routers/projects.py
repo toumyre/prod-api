@@ -5,6 +5,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models.project import Project
 from app.models.user import User
+from app.uploads_cleanup import delete_upload_if_unused
 from app.schemas.project import (
     ProjectCreate,
     ProjectUpdate,
@@ -76,10 +77,13 @@ async def update_project(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
+    old_image = project.image_url
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(project, key, value)
     db.commit()
     db.refresh(project)
+    if project.image_url != old_image:
+        delete_upload_if_unused(db, old_image)
     return project
 
 
@@ -92,5 +96,7 @@ async def delete_project(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
+    old_image = project.image_url
     db.delete(project)
     db.commit()
+    delete_upload_if_unused(db, old_image)

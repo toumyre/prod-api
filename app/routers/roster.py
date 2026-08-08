@@ -4,6 +4,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models.roster import RosterMember
 from app.models.user import User
+from app.uploads_cleanup import delete_upload_if_unused
 from app.schemas.roster import (
     RosterMemberCreate,
     RosterMemberUpdate,
@@ -67,10 +68,13 @@ async def update_roster_member(
     member = db.query(RosterMember).filter(RosterMember.id == member_id).first()
     if not member:
         raise HTTPException(status_code=404, detail="Membre non trouvé")
+    old_photo = member.photo_url
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(member, key, value)
     db.commit()
     db.refresh(member)
+    if member.photo_url != old_photo:
+        delete_upload_if_unused(db, old_photo)
     return member
 
 
@@ -83,5 +87,7 @@ async def delete_roster_member(
     member = db.query(RosterMember).filter(RosterMember.id == member_id).first()
     if not member:
         raise HTTPException(status_code=404, detail="Membre non trouvé")
+    old_photo = member.photo_url
     db.delete(member)
     db.commit()
+    delete_upload_if_unused(db, old_photo)

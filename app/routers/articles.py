@@ -5,6 +5,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models.article import Article
 from app.models.user import User
+from app.uploads_cleanup import delete_upload_if_unused
 from app.schemas.article import (
     ArticleCreate,
     ArticleUpdate,
@@ -71,10 +72,13 @@ async def update_article(
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
         raise HTTPException(status_code=404, detail="Article non trouvé")
+    old_image = article.image_url
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(article, key, value)
     db.commit()
     db.refresh(article)
+    if article.image_url != old_image:
+        delete_upload_if_unused(db, old_image)
     return article
 
 
@@ -87,5 +91,7 @@ async def delete_article(
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
         raise HTTPException(status_code=404, detail="Article non trouvé")
+    old_image = article.image_url
     db.delete(article)
     db.commit()
+    delete_upload_if_unused(db, old_image)

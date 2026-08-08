@@ -4,6 +4,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models.about import About
 from app.models.user import User
+from app.uploads_cleanup import delete_upload_if_unused
 from app.schemas.about import AboutCreate, AboutUpdate, AboutResponse, AboutPublic
 
 router = APIRouter()
@@ -52,8 +53,11 @@ async def update_about(
     about = db.query(About).filter(About.id == about_id).first()
     if not about:
         raise HTTPException(status_code=404, detail="Non trouvé")
+    old_photo = about.photo_url
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(about, key, value)
     db.commit()
     db.refresh(about)
+    if about.photo_url != old_photo:
+        delete_upload_if_unused(db, old_photo)
     return about

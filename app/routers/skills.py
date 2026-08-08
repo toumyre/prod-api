@@ -4,6 +4,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models.skill import Skill
 from app.models.user import User
+from app.uploads_cleanup import delete_upload_if_unused
 from app.schemas.skill import (
     SkillCreate,
     SkillUpdate,
@@ -59,10 +60,13 @@ async def update_skill(
     skill = db.query(Skill).filter(Skill.id == skill_id).first()
     if not skill:
         raise HTTPException(status_code=404, detail="Compétence non trouvée")
+    old_logo = skill.logo_url
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(skill, key, value)
     db.commit()
     db.refresh(skill)
+    if skill.logo_url != old_logo:
+        delete_upload_if_unused(db, old_logo)
     return skill
 
 
@@ -75,5 +79,7 @@ async def delete_skill(
     skill = db.query(Skill).filter(Skill.id == skill_id).first()
     if not skill:
         raise HTTPException(status_code=404, detail="Compétence non trouvée")
+    old_logo = skill.logo_url
     db.delete(skill)
     db.commit()
+    delete_upload_if_unused(db, old_logo)
